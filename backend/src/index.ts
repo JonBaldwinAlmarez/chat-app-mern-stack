@@ -1,10 +1,14 @@
 import express from "express";
-import type { Request, Response } from "express";
+import dotenv from "dotenv";
+import connectDB from "./config/db";
+
+dotenv.config();
+connectDB();
 
 const app = express();
-const PORT: number = 5000;
+const PORT: number = Number(process.env.PORT) || 5000;
 
-app.get("/", (req: Request, res: Response) => {
+app.get("/", (req, res) => {
   res.send("Hello World! From TypeScript with Express");
 });
 
