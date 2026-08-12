@@ -14,7 +14,7 @@ const app = express();
 
 // Define the server port using the environment variable,
 // with port 5000 as the fallback value.
-const PORT: number = Number(process.env.PORT) || 5000;
+const PORT: number = Number(process.env.PORT) || 5001;
 
 // Parse incoming JSON request bodies.
 app.use(express.json());
