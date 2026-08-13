@@ -28,8 +28,6 @@ const generateToken = (userId: string): string => {
   return jwt.sign({ id: userId }, secret, { expiresIn: "1d" });
 };
 
-
-
 export const signup = async (
   req: Request<{}, {}, SignUpBody>,
   res: Response,
@@ -83,67 +81,65 @@ export const signup = async (
   }
 };
 
-
-
 export const login = async (
-    req: Request<{}, {}, LoginBody>,
-    res: Response,
-  ): Promise<void> => {
-    try {
-      // Extract the user's login credentials from the request body.
-      const { email, password } = req.body;
-  
-      // Validate that all required login fields are provided.
-      if (!email || !password) {
-        res.status(400).json({
-          message: "Email and password are required",
-        });
-        return;
-      }
-  
-      // Find the user associated with the provided email address.
-      const user = await User.findOne({ email });
-  
-      // Return a generic authentication error if the account does not exist.
-      // Using the same message for authentication failures helps avoid revealing
-      // whether a specific email address is registered.
-      if (!user) {
-        res.status(401).json({
-          message: "Invalid credentials",
-        });
-        return;
-      }
-  
-      // Compare the provided password with the hashed password stored in the database.
-      const isMatch = await user.comparePassword(password);
-  
-      // Reject the request when the provided password does not match.
-      if (!isMatch) {
-        res.status(401).json({
-          message: "Invalid credentials",
-        });
-        return;
-      }
-  
-      // Generate an authentication token using the authenticated user's ID.
-      const token = generateToken(user._id.toString());
-  
-      // Return the token along with non-sensitive user information.
-      res.status(200).json({
-        token,
-        user: {
-          id: user._id,
-          username: user.username,
-          email: user.email,
-        },
+  req: Request<{}, {}, LoginBody>,
+  res: Response,
+): Promise<void> => {
+  try {
+    // Extract the user's login credentials from the request body.
+    const { email, password } = req.body;
+
+    // Validate that all required login fields are provided.
+    if (!email || !password) {
+      res.status(400).json({
+        message: "Email and password are required",
       });
-    } catch (error) {
-      // Log unexpected errors for server-side debugging.
-      console.log("Login error:", error);
-  
-      // Return a generic server error without exposing internal details.
-      res.status(500).json({
-        message: "Server error during login",
-      });
+      return;
     }
-  };
+
+    // Find the user associated with the provided email address.
+    const user = await User.findOne({ email });
+
+    // Return a generic authentication error if the account does not exist.
+    // Using the same message for authentication failures helps avoid revealing
+    // whether a specific email address is registered.
+    if (!user) {
+      res.status(401).json({
+        message: "Invalid credentials",
+      });
+      return;
+    }
+
+    // Compare the provided password with the hashed password stored in the database.
+    const isMatch = await user.comparePassword(password);
+
+    // Reject the request when the provided password does not match.
+    if (!isMatch) {
+      res.status(401).json({
+        message: "Invalid credentials",
+      });
+      return;
+    }
+
+    // Generate an authentication token using the authenticated user's ID.
+    const token = generateToken(user._id.toString());
+
+    // Return the token along with non-sensitive user information.
+    res.status(200).json({
+      token,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+      },
+    });
+  } catch (error) {
+    // Log unexpected errors for server-side debugging.
+    console.log("Login error:", error);
+
+    // Return a generic server error without exposing internal details.
+    res.status(500).json({
+      message: "Server error during login",
+    });
+  }
+};
