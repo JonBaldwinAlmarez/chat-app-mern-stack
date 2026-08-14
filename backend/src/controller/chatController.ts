@@ -26,9 +26,9 @@ export const accessChat = async (
     // Look for an existing chat that contains exactly these two  participants.
     let chat = await Chat.findOne({
       participants: { $all: [myId, userId], $size: 2 }, // this is a MongoDB query that says "the participants array must contain both of these ids, AND have exactly 2 elements total."
-    }).populate("populate", "username email");
+    }).populate("participants", "username email");
 
-    if (!chat) {
+    if (chat) {
       res.status(200).json(chat);
       return;
     }
@@ -38,7 +38,7 @@ export const accessChat = async (
       participants: [myId, userId],
     });
 
-    const fullChat = await newChat.populate("populate", "username email");
+    const fullChat = await newChat.populate("participants", "username email");
 
     res.status(201).json(fullChat);
   } catch (error) {
