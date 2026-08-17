@@ -1,6 +1,7 @@
 import { Response } from "express";
 import { AuthRequest } from "../middleware/authMiddleware";
 import Message from "../models/Message";
+import Chat from "../models/Chat";
 
 interface SendMessageBody {
   chatId: string;
@@ -31,6 +32,31 @@ export const sendMessage = async (
     if (!senderId) {
       res.status(401).json({
         message: "Not authorized",
+      });
+      return;
+    }
+
+    // Retrieve the chat associated with the provided chat ID.
+    const chat = await Chat.findById(chatId);
+
+    // Return a 404 error if the requested chat does not exist.
+    if (!chat) {
+      res.status(404).json({
+        message: "Chat not found",
+      });
+      return;
+    }
+
+    // Check whether the authenticated user is included in the chat participants.
+    // Convert the MongoDB ObjectId to a string before comparing it with senderId.
+    const isParticipant = chat.participants.some(
+      (participantId) => participantId.toString() === senderId,
+    );
+
+    // Prevent users who are not participants from accessing the chat.
+    if (!isParticipant) {
+      res.status(403).json({
+        message: "You are not part of this chat",
       });
       return;
     }
