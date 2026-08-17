@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import connectDB from "./config/db";
 import authRoutes from "./routes/authRoutes";
 import chatRoutes from "./routes/chatRoutes";
+import messageRoutes from "./routes/messageRoutes";
 
 // Load environment variables from the .env file.
 dotenv.config();
@@ -19,6 +20,7 @@ app.use(express.json()); // Parse incoming JSON request bodies.
 
 app.use("/api/auth", authRoutes); // Register authentication-related API routes.
 app.use("/api/chats", chatRoutes); // Register chat-related API routes, protected by JWT authentication middleware.
+app.use("/api/messages", messageRoutes);
 
 // Basic health-check endpoint to verify that the server is running.
 app.get("/", (req, res) => {
