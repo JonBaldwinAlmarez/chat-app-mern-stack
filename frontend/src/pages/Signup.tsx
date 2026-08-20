@@ -2,7 +2,6 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { sign } from "crypto";
 
 const Signup = () => {
   const [userName, setUserName] = useState("");
@@ -68,7 +67,7 @@ const Signup = () => {
             required
           />
         </div>
-        <button type="button">
+        <button type="submit" disabled={isSubmitting}>
           {isSubmitting ? "Creating Account" : "Sign up"}
         </button>
       </form>

@@ -48,7 +48,9 @@ const Login = () => {
             onChange={(e) => setEmail(e.target.value)}
             required
           />
+          <p>{email}</p>
         </div>
+
         <div>
           <label htmlFor="password">Password</label>
           <input
@@ -58,6 +60,7 @@ const Login = () => {
             onChange={(e) => setPassword(e.target.value)}
             required
           />
+          <p>{password}</p>
         </div>
 
         <button type="submit" disabled={isSubmitting}>
