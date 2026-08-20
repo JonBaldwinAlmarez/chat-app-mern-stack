@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./config/db";
 import authRoutes from "./routes/authRoutes";
@@ -16,6 +17,7 @@ const app = express(); // Initialize the Express application.
 /* Define the server port using the environment variable,  with port 5000 as the fallback value. */
 const PORT: number = Number(process.env.PORT) || 5001;
 
+app.use(cors()); // Prevent CORs error policy
 app.use(express.json()); // Parse incoming JSON request bodies.
 
 app.use("/api/auth", authRoutes); // Register authentication-related API routes.
