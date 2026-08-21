@@ -1,9 +1,18 @@
 import { Router } from "express";
-import {signup, login} from "../controller/authController"
+import { signup, login, findUserByEmail } from "../controller/authController";
+import { protect } from "../middleware/authMiddleware";
 
-const router = Router()
+// Initialize the Express router for authentication-related endpoints.
+const router = Router();
 
-router.post("/signup", signup)
-router.post("/login", login)
+// Register a new user account.
+router.post("/signup", signup);
 
-export default router
+// Authenticate an existing user and issue a JWT.
+router.post("/login", login);
+
+// Finds a user by email while restricting access to authenticated users through the "protect" middleware.
+router.get("/find", protect, findUserByEmail);
+
+// Export the authentication router for registration in the main Express application.
+export default router;

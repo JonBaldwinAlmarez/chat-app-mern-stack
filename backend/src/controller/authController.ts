@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import { Request, Response } from "express";
 import User from "../models/User";
+import { AuthRequest } from "../middleware/authMiddleware";
 
 interface SignUpBody {
   username: string;
@@ -140,6 +141,50 @@ export const login = async (
     // Return a generic server error without exposing internal details.
     res.status(500).json({
       message: "Server error during login",
+    });
+  }
+};
+
+// Finds a user by their email address and returns their public account information.
+export const findUserByEmail = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    // Retrieve the email address from the query parameters.
+    const { email } = req.query;
+
+    // Validate that an email was provided and that it is a string.
+    if (!email || typeof email !== "string") {
+      res.status(400).json({
+        message: "Email is required",
+      });
+      return;
+    }
+
+    // Search for the user by email and return only non-sensitive account information.
+    // The password and other private fields are intentionally excluded.
+    const foundUser = await User.findOne({ email }).select(
+      "username email _id",
+    );
+
+    // Return a 404 response when no matching user is found.
+    if (!foundUser) {
+      res.status(404).json({
+        message: "User not found",
+      });
+      return;
+    }
+
+    // Return the user's public information to the client.
+    res.status(200).json(foundUser);
+  } catch (error) {
+    // Log unexpected errors for server-side debugging.
+    console.error("Find user error:", error);
+
+    // Return a generic server error without exposing internal details.
+    res.status(500).json({
+      message: "Server error finding user",
     });
   }
 };

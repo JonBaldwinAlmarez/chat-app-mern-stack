@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import type { FormEvent } from "react";
 import { useAuth } from "../context/AuthContext";
 import api from "../api/axios";
 
@@ -17,6 +18,14 @@ interface ChatType {
   updatedAt: string;
 }
 
+interface MessageType {
+  _id: string;
+  chat: string;
+  sender: User;
+  text: string;
+  createdAt: string;
+}
+
 const Chat = () => {
   // Retrieve the authenticated user and logout function from the auth context.
   const { user, logout } = useAuth();
@@ -26,6 +35,24 @@ const Chat = () => {
 
   // Tracks whether the chat list is currently being retrieved from the API.
   const [isLoadingChats, setIsLoadingChats] = useState(true);
+
+  // Stores the messages belonging to the currently selected chat.
+  const [messages, setMessages] = useState<MessageType[]>([]);
+
+  // Stores the chat conversation currently selected by the user.
+  const [selectedChat, setSelectedChat] = useState<ChatType | null>(null);
+
+  // Tracks whether messages are currently being fetched from the API.
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+
+  // Stores the text currently being entered for a new message.
+  const [newMessageText, setNewMessageText] = useState("");
+
+  // Stores the email address used when starting a new chat.
+  const [newChatEmail, setNewChatEmail] = useState("");
+
+  // Stores an error message encountered while attempting to start a new chat.
+  const [startChatError, setStartChatError] = useState("");
 
   // Fetch the user's conversations when the component is mounted.
   useEffect(() => {
@@ -47,6 +74,87 @@ const Chat = () => {
 
     fetchChats();
   }, []);
+
+  // Fetch messages whenever selectedChat changes
+  useEffect(() => {
+    if (!selectedChat) {
+      setMessages([]);
+      return;
+    }
+
+    // Fetch messages
+    const fecthMessages = async () => {
+      try {
+        const response = await api.get(`/messages/${selectedChat._id}`);
+        setMessages(response.data);
+      } catch (error) {
+        console.error("Failed to Fetch Message: ", error);
+      } finally {
+        setIsLoadingMessages(false);
+      }
+    };
+
+    fecthMessages();
+  }, [selectedChat]);
+
+  // Send a message
+  const handleSendMessage = async (e: FormEvent): Promise<void> => {
+    e.preventDefault();
+
+    if (!newMessageText.trim() || !selectedChat) return;
+
+    try {
+      const response = await api.post("/message", {
+        chatId: selectedChat._id,
+        text: newMessageText,
+      });
+
+      setMessages((prev) => [...prev, response.data]);
+      setNewMessageText("");
+    } catch (error) {
+      console.error("Failed to send message", error);
+    }
+  };
+
+  const handleStartChat = async (e: FormEvent): Promise<void> => {
+    // Prevent the form from reloading the page when submitted.
+    e.preventDefault();
+
+    try {
+      // Search for the user using the email address provided in the form.
+      // encodeURIComponent safely encodes the email before adding it to the URL.
+      const foundUserRes = await api.get(
+        `/auth/find?email=${encodeURIComponent(newChatEmail)}`,
+      );
+
+      // Extract the matched user's ID from the API response.
+      const otherUserId = foundUserRes.data._id;
+
+      // Access an existing chat or create a new chat with the selected user.
+      const chatRes = await api.post("/chats", {
+        userId: otherUserId,
+      });
+
+      // Add the chat to the list only if it does not already exist.
+      setChats((prev) => {
+        const exists = prev.some((chat) => chat._id === chatRes.data._id);
+
+        return exists ? prev : [chatRes.data, ...prev];
+      });
+
+      // Automatically select the newly accessed or created chat.
+      setSelectedChat(chatRes.data);
+
+      // Clear the email input after successfully starting the chat.
+      setNewChatEmail("");
+    } catch (error) {
+      // Log the error for server-side debugging.
+      console.error("Failed to start chat:", error);
+
+      // Display a user-friendly error message when the request fails.
+      setStartChatError("User not found or something is wrong");
+    }
+  };
 
   // Finds the other participant in a one-to-one conversation.
   // The authenticated user is excluded from the result.
